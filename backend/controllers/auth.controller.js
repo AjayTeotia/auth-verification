@@ -45,7 +45,7 @@ export const signup = async (req, res) => {
     const verificationCodeExpires = Date.now() + 10 * 60 * 1000;
 
     // New User
-    const newUser = new User({
+    const user = new User({
       email,
       password: hashedPassword,
       name,
@@ -54,19 +54,19 @@ export const signup = async (req, res) => {
     });
 
     // To sava new user data
-    await newUser.save();
+    await user.save();
 
     // JWT token
-    generateTokenAndSetCookie(res, newUser._id);
+    generateTokenAndSetCookie(res, user._id);
 
     // Send verification email
-    await sendVerificationEmail(newUser.email, verificationCode);
+    await sendVerificationEmail(user.email, verificationCode);
 
     res.status(httpStatus.CREATED).json({
       success: true,
       message: "USER CREATED SUCCESSFULLY",
-      newUser: {
-        ...newUser._doc,
+      user: {
+        ...user._doc,
         password: undefined,
       },
     });
@@ -83,34 +83,34 @@ export const verifyEmail = async (req, res) => {
   const { code } = req.body;
 
   try {
-    const newUser = await User.findOne({
+    const user = await User.findOne({
       verificationCode: code,
       verificationCodeExpires: { $gt: Date.now() },
     });
 
     // Check verification code is correct or not
-    if (!newUser) {
+    if (!user) {
       return res.status(httpStatus.BAD_REQUEST).json({
         success: false,
         message: "INVALID OR EXPIRED VERIFICATION CODE",
       });
     }
 
-    newUser.isVerified = true;
-    newUser.verificationCode = undefined;
-    newUser.verificationCodeExpires = undefined;
+    user.isVerified = true;
+    user.verificationCode = undefined;
+    user.verificationCodeExpires = undefined;
 
     // Update user data
-    await newUser.save();
+    await user.save();
 
     // Send welcome email
-    await sendWelcomeEmail(newUser.email, newUser.name);
+    await sendWelcomeEmail(user.email, user.name);
 
     res.status(httpStatus.OK).json({
       success: true,
       message: "EMAIL VERIFIED SUCCESSFULLY",
-      newUser: {
-        ...newUser._doc,
+      user: {
+        ...user._doc,
         password: undefined,
       },
     });

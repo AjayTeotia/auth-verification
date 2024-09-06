@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema(
 
     verificationCodeExpires: Date,
   },
-  { timespan: true }
+  { timestamps: true }
 );
 
 export const User = mongoose.model("User", userSchema);
